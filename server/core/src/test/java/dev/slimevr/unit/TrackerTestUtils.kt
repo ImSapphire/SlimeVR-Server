@@ -81,12 +81,19 @@ object TrackerTestUtils {
 		FastMath.isApproxEqual(q1.y, q2.y, tolerance) &&
 		FastMath.isApproxEqual(q1.z, q2.z, tolerance)
 
+	fun assertQuatApproxEqual(expected: Quaternion, actual: Quaternion, tolerance: Float = FastMath.ZERO_TOLERANCE, message: String? = null) {
+		if (!quatApproxEqual(expected, actual, tolerance)) {
+			AssertionFailureBuilder.assertionFailure().message(message)
+				.expected(expected).actual(actual).buildAndThrow()
+		}
+	}
+
 	fun vectorApproxEqual(v1: Vector3, v2: Vector3, tolerance: Float = FastMath.ZERO_TOLERANCE): Boolean = FastMath.isApproxEqual(v1.x, v2.x, tolerance) &&
 		FastMath.isApproxEqual(v1.y, v2.y, tolerance) &&
 		FastMath.isApproxEqual(v1.z, v2.z, tolerance)
 
-	fun assertVectorApproxEqual(expected: Vector3, actual: Vector3, message: String? = null) {
-		if (!vectorApproxEqual(expected, actual)) {
+	fun assertVectorApproxEqual(expected: Vector3, actual: Vector3, tolerance: Float = FastMath.ZERO_TOLERANCE, message: String? = null) {
+		if (!vectorApproxEqual(expected, actual, tolerance)) {
 			AssertionFailureBuilder.assertionFailure().message(message)
 				.expected(expected).actual(actual).buildAndThrow()
 		}

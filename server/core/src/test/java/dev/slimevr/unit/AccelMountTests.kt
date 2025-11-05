@@ -33,7 +33,7 @@ class AccelMountTests {
 		assertVectorApproxEqual(
 			expected,
 			result,
-			"Resulting vector is not equal to reference vector ($expected vs $result)",
+			message = "Resulting vector is not equal to reference vector ($expected vs $result)",
 		)
 	}
 
