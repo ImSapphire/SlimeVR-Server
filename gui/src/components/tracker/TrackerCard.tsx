@@ -212,6 +212,7 @@ export function TrackerCard({
           'rounded-lg overflow-hidden transition-[box-shadow] duration-200 ease-linear',
           interactable && 'hover:bg-background-50 cursor-pointer',
           outlined && 'outline outline-2 outline-accent-background-40',
+          tracker.accelRecordingInProgress && 'outline outline-2 -outline-offset-2 outline-status-recording',
           warning &&
             'outline outline-2 -outline-offset-2 outline-status-warning',
           bg

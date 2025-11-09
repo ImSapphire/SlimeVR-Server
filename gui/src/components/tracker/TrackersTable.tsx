@@ -111,6 +111,7 @@ export function RowContainer({
   onMouseOver,
   onMouseOut,
   warning,
+  recording,
 }: {
   children: ReactNode;
   rounded?: 'left' | 'right' | 'none';
@@ -120,6 +121,7 @@ export function RowContainer({
   onMouseOver?: MouseEventHandler<HTMLDivElement>;
   onMouseOut?: MouseEventHandler<HTMLDivElement>;
   warning: boolean;
+  recording: boolean;
 }) {
   const { useVelocity } = useTracker(tracker);
 
@@ -150,6 +152,8 @@ export function RowContainer({
           hover ? 'bg-background-50 cursor-pointer' : 'bg-background-60',
           (warning &&
             'border-status-warning border-solid border-t-2 border-b-2') ||
+          (recording &&
+            'border-status-recording border-solid border-t-2 border-b-2') ||
             'border-transparent'
         )}
       >
@@ -245,6 +249,7 @@ export function TrackersTable({
             warning={Object.values(statuses).some((status) =>
               trackerStatusRelated(data.tracker, status)
             )}
+            recording={data.tracker.accelRecordingInProgress}
           >
             {row(data) || <></>}
           </RowContainer>

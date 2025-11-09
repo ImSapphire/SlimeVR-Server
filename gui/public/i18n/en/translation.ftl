@@ -242,6 +242,7 @@ reset-mounting = Reset Mounting
 reset-mounting-feet = Reset Feet Mounting
 reset-mounting-fingers = Reset Fingers Mounting
 reset-yaw = Yaw Reset
+reset-recording_in_progress = Recording in progress...
 
 ## Serial detection stuff
 serial_detection-new_device-p0 = New serial device detected!

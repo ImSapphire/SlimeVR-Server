@@ -3,8 +3,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BodyPart,
   ResetRequestT,
+  ResetsSettingsT,
   ResetType,
   RpcMessage,
+  SettingsRequestT,
+  SettingsResponseT,
   StatusData,
 } from 'solarxr-protocol';
 import { useConfig } from '@/hooks/config';
@@ -22,9 +25,12 @@ import {
   FullResetIcon,
 } from '@/components/commons/icon/ResetIcon';
 import { useStatusContext } from '@/hooks/status-system';
+import { useAtomValue } from 'jotai';
+import { flatTrackersAtom } from '@/store/app-store';
 import classNames from 'classnames';
 import { FootIcon } from '@/components/commons/icon/FootIcon';
 import { FingersIcon } from '@/components/commons/icon/FingersIcon';
+import { useInterval } from '@/hooks/timeout';
 
 export function ResetButton({
   type,
@@ -40,11 +46,13 @@ export function ResetButton({
   onReseted?: () => void;
 }) {
   const { l10n } = useLocalization();
-  const { sendRPCPacket } = useWebsocketAPI();
+  const { sendRPCPacket, useRPCPacket } = useWebsocketAPI();
+  const trackers = useAtomValue(flatTrackersAtom);
   const { statuses } = useStatusContext();
   const { config } = useConfig();
   const finishedTimeoutRef = useRef(-1);
   const [isFinished, setFinished] = useState(false);
+  const [resetSettings, setResetSettings] = useState(new ResetsSettingsT());
 
   const needsFullReset = useMemo(
     () =>
@@ -55,6 +63,28 @@ export function ResetButton({
     [statuses]
   );
 
+  const bodyParts = [
+    BodyPart.HEAD,
+    BodyPart.NECK,
+    BodyPart.CHEST,
+    BodyPart.WAIST,
+    BodyPart.HIP,
+    BodyPart.LEFT_UPPER_LEG,
+    BodyPart.RIGHT_UPPER_LEG,
+    BodyPart.LEFT_LOWER_LEG,
+    BodyPart.RIGHT_LOWER_LEG,
+    BodyPart.LEFT_LOWER_ARM,
+    BodyPart.RIGHT_LOWER_ARM,
+    BodyPart.LEFT_UPPER_ARM,
+    BodyPart.RIGHT_UPPER_ARM,
+    BodyPart.LEFT_HAND,
+    BodyPart.RIGHT_HAND,
+    BodyPart.LEFT_SHOULDER,
+    BodyPart.RIGHT_SHOULDER,
+    BodyPart.UPPER_CHEST,
+    BodyPart.LEFT_HIP,
+    BodyPart.RIGHT_HIP,
+  ];
   const feetBodyParts = [BodyPart.LEFT_FOOT, BodyPart.RIGHT_FOOT];
   const fingerBodyParts = [
     BodyPart.LEFT_THUMB_METACARPAL,
@@ -89,6 +119,35 @@ export function ResetButton({
     BodyPart.RIGHT_LITTLE_DISTAL,
   ];
 
+  const isAccelRecording = useMemo(() => {
+    let parts: BodyPart[];
+    switch (bodyPartsToReset) {
+      case 'default':
+        parts = bodyParts;
+        if (resetSettings.resetMountingFeet)
+          parts = parts.concat(feetBodyParts);
+        break;
+      case 'feet':
+        parts = feetBodyParts;
+        break;
+      case 'fingers':
+        parts = fingerBodyParts;
+        break;
+    }
+
+    const filteredTrackers = parts.length == 0 ? trackers : trackers.filter((tracker) => parts.find((part) => part == tracker.tracker.info?.bodyPart));
+    return type === ResetType.Mounting && filteredTrackers.some((tracker) => tracker.tracker.accelRecordingInProgress);
+  }, [trackers]);
+
+  useInterval(() => {
+    sendRPCPacket(RpcMessage.SettingsRequest, new SettingsRequestT());
+  }, 1000);
+
+  useRPCPacket(RpcMessage.SettingsResponse, ({ resetsSettings }: SettingsResponseT) => {
+    if (resetsSettings)
+      setResetSettings(resetsSettings!);
+  });
+
   const reset = () => {
     const req = new ResetRequestT();
     req.resetType = type;
@@ -112,13 +171,15 @@ export function ResetButton({
     onCountdownEnd: () => {
       maybePlaySoundOnResetEnd(type);
       reset();
-      setFinished(true);
-      if (finishedTimeoutRef.current !== -1)
-        clearTimeout(finishedTimeoutRef.current);
-      finishedTimeoutRef.current = setTimeout(() => {
-        setFinished(false);
-        finishedTimeoutRef.current = -1;
-      }, 2000) as unknown as number;
+      if (!resetSettings.stepMounting) {
+        setFinished(true);
+        if (finishedTimeoutRef.current !== -1)
+          clearTimeout(finishedTimeoutRef.current);
+        finishedTimeoutRef.current = setTimeout(() => {
+          setFinished(false);
+          finishedTimeoutRef.current = -1;
+        }, 2000) as unknown as number;
+      }
       if (onReseted) onReseted();
     },
   });
@@ -131,17 +192,20 @@ export function ResetButton({
             (bodyPartsToReset !== 'default' ? '-' + bodyPartsToReset : '')
         );
       case ResetType.Mounting:
-        return l10n.getString(
-          'reset-mounting' +
-            (bodyPartsToReset !== 'default' ? '-' + bodyPartsToReset : '')
-        );
+        if (isAccelRecording)
+          return l10n.getString('reset-recording_in_progress');
+        else
+          return l10n.getString(
+            'reset-mounting' +
+              (bodyPartsToReset !== 'default' ? '-' + bodyPartsToReset : '')
+          );
       case ResetType.Full:
         return l10n.getString(
           'reset-full' +
             (bodyPartsToReset !== 'default' ? '-' + bodyPartsToReset : '')
         );
     }
-  }, [type, bodyPartsToReset]);
+  }, [type, bodyPartsToReset, isAccelRecording]);
 
   const getIcon = () => {
     switch (type) {
@@ -190,13 +254,13 @@ export function ResetButton({
       onClick={triggerReset}
       className={classNames(
         'border-2',
-        isFinished
-          ? 'border-status-success'
-          : 'transition-[border-color] duration-500 ease-in-out border-transparent',
+        isFinished && 'border-status-success',
+        isAccelRecording && 'border-status-recording',
+        (!isFinished && !isAccelRecording) && 'transition-[border-color] duration-500 ease-in-out border-transparent',
         className
       )}
       variant="primary"
-      disabled={isCounting || needsFullReset}
+      disabled={isCounting || needsFullReset || isAccelRecording}
     >
       {!isCounting || type === ResetType.Yaw ? text : String(timer)}
     </Button>
@@ -206,12 +270,12 @@ export function ResetButton({
       onClick={triggerReset}
       className={classNames(
         'border-2',
-        isFinished
-          ? 'border-status-success'
-          : 'transition-[border-color] duration-500 ease-in-out border-transparent',
+        isFinished && 'border-status-success',
+        isAccelRecording && 'border-status-recording',
+        (!isFinished && !isAccelRecording) && 'transition-[border-color] duration-500 ease-in-out border-transparent',
         className
       )}
-      disabled={isCounting || needsFullReset}
+      disabled={isCounting || needsFullReset || isAccelRecording}
     >
       {!isCounting || type === ResetType.Yaw ? text : String(timer)}
     </BigButton>
