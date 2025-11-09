@@ -1621,7 +1621,11 @@ class HumanSkeleton(
 			if (bodyParts.isEmpty() || bodyParts.contains(BodyPart.HEAD)) {
 				// Only reset if head needsMounting or is computed but not HMD
 				if (it.needsMounting || (it.isComputed && !it.isHmd)) {
-					it.resetsHandler.resetMountingAccel(referenceRotation)
+					if (it.resetsHandler.stepMounting) {
+						it.resetsHandler.resetMountingAccel(referenceRotation)
+					} else {
+						it.resetsHandler.resetMounting(referenceRotation)
+					}
 				}
 			}
 			referenceRotation = it.getRotation()
@@ -1632,7 +1636,11 @@ class HumanSkeleton(
 		for (tracker in trackersToReset) {
 			// Only reset if tracker needsMounting
 			if (tracker != null && tracker.needsMounting && (bodyParts.isEmpty() || bodyParts.contains(tracker.trackerPosition?.bodyPart))) {
-				tracker.resetsHandler.resetMountingAccel(referenceRotation, onlyFeet)
+				if (tracker.resetsHandler.stepMounting) {
+					tracker.resetsHandler.resetMountingAccel(referenceRotation, onlyFeet)
+				} else {
+					tracker.resetsHandler.resetMounting(referenceRotation, onlyFeet)
+				}
 			}
 		}
 		legTweaks.resetBuffer()

@@ -101,6 +101,7 @@ export type SettingsForm = {
     yawResetSmoothTime: number;
     saveMountingReset: boolean;
     resetHmdPitch: boolean;
+    stepMounting: boolean;
   };
   stayAligned: StayAlignedSettingsForm;
 };
@@ -162,6 +163,7 @@ const defaultValues: SettingsForm = {
     yawResetSmoothTime: 0.0,
     saveMountingReset: false,
     resetHmdPitch: false,
+    stepMounting: false,
   },
   stayAligned: defaultStayAlignedSettings,
 };
@@ -298,6 +300,7 @@ export function GeneralSettings() {
       resetsSettings.saveMountingReset =
         values.resetsSettings.saveMountingReset;
       resetsSettings.resetHmdPitch = values.resetsSettings.resetHmdPitch;
+      resetsSettings.stepMounting = values.resetsSettings.stepMounting;
       settings.resetsSettings = resetsSettings;
     }
 
@@ -833,46 +836,64 @@ export function GeneralSettings() {
               />
             </div>
 
-            <div className="flex flex-col pt-2">
+            <div className="flex flex-col pt-2 pb-2">
               <Typography variant="section-title">
                 {l10n.getString('settings-general-fk_settings-reset_settings')}
               </Typography>
             </div>
+            <div className="grid sm:grid-cols-1 gap-3 pb-3">
+              <Typography>
+                {l10n.getString(
+                  'settings-general-fk_settings-reset_settings-reset_hmd_pitch-description'
+                )}
+              </Typography>
+            </div>
+            <div className="grid sm:grid-cols-1 gap-2 pb-3">
+              <CheckBox
+                variant="toggle"
+                outlined
+                control={control}
+                name="resetsSettings.resetHmdPitch"
+                label={l10n.getString(
+                  'settings-general-fk_settings-reset_settings-reset_hmd_pitch'
+                )}
+              />
+            </div>
             <div className="flex flex-col pt-2 pb-3">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-2">
-                  <Typography>
-                    {l10n.getString(
-                      'settings-general-fk_settings-reset_settings-reset_hmd_pitch-description'
-                    )}
-                  </Typography>
-                  <CheckBox
-                    variant="toggle"
-                    outlined
-                    control={control}
-                    name="resetsSettings.resetHmdPitch"
-                    label={l10n.getString(
-                      'settings-general-fk_settings-reset_settings-reset_hmd_pitch'
-                    )}
-                  />
-                </div>
-                <div className="flex flex-col gap-2 justify-end">
-                  <Typography>
-                    {l10n.getString(
-                      'settings-general-fk_settings-leg_fk-reset_mounting_feet-description-v1'
-                    )}
-                  </Typography>
-                  <CheckBox
-                    variant="toggle"
-                    outlined
-                    control={control}
-                    name="resetsSettings.resetMountingFeet"
-                    label={l10n.getString(
-                      'settings-general-fk_settings-leg_fk-reset_mounting_feet-v1'
-                    )}
-                  />
-                </div>
-              </div>
+              <Typography>
+                {l10n.getString(
+                  'settings-general-fk_settings-leg_fk-reset_mounting_feet-description-v1'
+                )}
+              </Typography>
+            </div>
+            <div className="grid sm:grid-cols-1 gap-3 pb-3">
+              <CheckBox
+                variant="toggle"
+                outlined
+                control={control}
+                name="resetsSettings.resetMountingFeet"
+                label={l10n.getString(
+                  'settings-general-fk_settings-leg_fk-reset_mounting_feet-v1'
+                )}
+              />
+            </div>
+            <div className="flex flex-col pt-2 pb-3">
+              <Typography>
+                {l10n.getString(
+                  'settings-general-fk_settings-reset_settings-step_mounting-description'
+                )}
+              </Typography>
+            </div>
+            <div className="grid sm:grid-cols-1 gap-3 pb-3">
+              <CheckBox
+                variant="toggle"
+                outlined
+                control={control}
+                name="resetsSettings.stepMounting"
+                label={l10n.getString(
+                  'settings-general-fk_settings-reset_settings-step_mounting'
+                )}
+              />
             </div>
 
             <div>

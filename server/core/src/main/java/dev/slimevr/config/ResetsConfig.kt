@@ -46,6 +46,8 @@ class ResetsConfig {
 	// Reset the HMD's pitch upon full reset
 	var resetHmdPitch = false
 
+	var stepMounting = false
+
 	fun updateTrackersResetsSettings() {
 		for (t in VRServer.instance.allTrackers) {
 			t.resetsHandler.readResetConfig(this)
