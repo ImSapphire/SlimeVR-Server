@@ -1329,7 +1329,7 @@ status_system-StatusPublicNetwork = {$count ->
     [one] Your network profile is currently set to Public ({$adapters}). This is not recommended for SlimeVR to function properly. <PublicFixLink>See how to fix it here.</PublicFixLink>
     *[many] Some of your network adapters are set to public: {$adapters}. This is not recommended for SlimeVR to function properly. <PublicFixLink>See how to fix it here.</PublicFixLink>
 }
-
+status_system-StatusTrackerAccelTimeout = One or more trackers failed to perform step mounting.
 
 ## Firmware tool globals
 firmware_tool-next_step = Next Step

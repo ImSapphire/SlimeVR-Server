@@ -476,6 +476,8 @@ class TrackerResetsHandler(val tracker: Tracker) {
 		if (saveMountingReset) tracker.saveMountingResetOrientation(mountRotFix)
 
 		tracker.resetFilteringQuats(reference)
+		tracker.accelTimeout = false
+		tracker.checkReportAccelStatus()
 	}
 
 	/**
@@ -487,6 +489,8 @@ class TrackerResetsHandler(val tracker: Tracker) {
 
 	fun clearMounting() {
 		mountRotFix = Quaternion.IDENTITY
+		tracker.accelTimeout = false
+		tracker.checkReportAccelStatus()
 	}
 
 	// EulerOrder.YXZ is actually better for gyroscope fix, as it can get yaw at any roll.

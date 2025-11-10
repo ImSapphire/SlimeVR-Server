@@ -18,7 +18,7 @@ import { useAtomValue } from 'jotai';
 import { flatTrackersAtom } from '@/store/app-store';
 import { useVRCConfig } from '@/hooks/vrc-config';
 
-const DONT_REPEAT_STATUSES = [StatusData.StatusTrackerReset];
+const DONT_REPEAT_STATUSES = [StatusData.StatusTrackerReset, StatusData.StatusTrackerAccelTimeout];
 
 export function Home() {
   const { l10n } = useLocalization();

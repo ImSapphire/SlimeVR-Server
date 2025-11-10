@@ -10,6 +10,7 @@ import {
   StatusSystemRequestT,
   StatusSystemResponseT,
   StatusSystemUpdateT,
+  StatusTrackerAccelTimeoutT,
   StatusTrackerErrorT,
   StatusTrackerResetT,
   StatusUnassignedHMDT,
@@ -125,6 +126,7 @@ export function parseStatusToLocale(
     case StatusData.NONE:
     case StatusData.StatusTrackerReset:
     case StatusData.StatusUnassignedHMD:
+    case StatusData.StatusTrackerAccelTimeout:
       return {};
     case StatusData.StatusPublicNetwork: {
       const data = status.data as StatusPublicNetworkT;
@@ -196,6 +198,13 @@ export function trackerStatusRelated(
     }
     case StatusData.StatusUnassignedHMD: {
       const data = status.data as StatusUnassignedHMDT;
+      return (
+        data.trackerId?.trackerNum == tracker.trackerId?.trackerNum &&
+        data.trackerId?.deviceId?.id === tracker.trackerId?.deviceId?.id
+      );
+    }
+    case StatusData.StatusTrackerAccelTimeout: {
+      const data = status.data as StatusTrackerAccelTimeoutT;
       return (
         data.trackerId?.trackerNum == tracker.trackerId?.trackerNum &&
         data.trackerId?.deviceId?.id === tracker.trackerId?.deviceId?.id

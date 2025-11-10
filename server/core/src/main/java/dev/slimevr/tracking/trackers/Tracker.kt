@@ -19,6 +19,8 @@ import solarxr_protocol.datatypes.DeviceIdT
 import solarxr_protocol.datatypes.TrackerIdT
 import solarxr_protocol.rpc.StatusData
 import solarxr_protocol.rpc.StatusDataUnion
+import solarxr_protocol.rpc.StatusTrackerAccelTimeout
+import solarxr_protocol.rpc.StatusTrackerAccelTimeoutT
 import solarxr_protocol.rpc.StatusTrackerErrorT
 import solarxr_protocol.rpc.StatusTrackerResetT
 import kotlin.math.abs
@@ -143,6 +145,7 @@ class Tracker @JvmOverloads constructor(
 			}
 			checkReportErrorStatus()
 			checkReportRequireReset()
+			checkReportAccelStatus()
 
 			VRServer.instance.trackerStatusChanged(this, old, new)
 		}
@@ -268,6 +271,37 @@ class Tracker @JvmOverloads constructor(
 		lastErrorStatus = VRServer.instance.statusSystem.addStatus(status, true)
 	}
 
+	fun checkReportAccelStatus() {
+		if (accelTimeout && lastAccelStatus == 0u) {
+			reportAccelStatus()
+		} else if (lastAccelStatus != 0u && !accelTimeout) {
+			VRServer.instance.statusSystem.removeStatus(lastAccelStatus)
+			lastAccelStatus = 0u
+		}
+	}
+
+	var lastAccelStatus = 0u
+	private fun reportAccelStatus() {
+		require(lastAccelStatus == 0u) {
+			"lastAccelStatus must be 0u, but was $lastAccelStatus"
+		}
+
+		val tempTrackerNum = this.trackerNum
+		val statusMsg = StatusTrackerAccelTimeoutT().apply {
+			trackerId = TrackerIdT().apply {
+				if (device != null) {
+					deviceId = DeviceIdT().apply { id = device.id }
+				}
+				trackerNum = tempTrackerNum
+			}
+		}
+		val status = StatusDataUnion().apply {
+			type = StatusData.StatusTrackerAccelTimeout
+			value = statusMsg
+		}
+		lastAccelStatus = VRServer.instance.statusSystem.addStatus(status, true)
+	}
+
 	/**
 	 * Reads/loads from the given config
 	 */
@@ -363,6 +397,7 @@ class Tracker @JvmOverloads constructor(
 	var curTimeline: AccelTimeline? = null
 
 	var accelMountInProgress = false
+	var accelTimeout = false
 
 	fun accumSample(accum: AccelAccumulator, sample: AccelSample, lastSampleTime: Long = -1, accelBias: Vector3 = Vector3.NULL): Float {
 		val delta = if (lastSampleTime >= 0) {
@@ -423,7 +458,9 @@ class Tracker @JvmOverloads constructor(
 
 	fun startMounting() {
 		accelMountInProgress = true
+		accelTimeout = false
 		startTime = System.currentTimeMillis()
+		checkReportAccelStatus()
 	}
 
 	/**
@@ -550,6 +587,15 @@ class Tracker @JvmOverloads constructor(
 				} else {
 					lastSamples.add(sample)
 				}
+			}
+
+			if (System.currentTimeMillis() - startTime > 5000) {
+				LogManager.warning("[Accel] Tracker $id (${trackerPosition?.designation}) has been recording for longer than 5 seconds! Aborting.")
+				accelMountInProgress = false
+				accelTimeout = true
+				curTimeline = null
+				lastSamples.clear()
+				checkReportAccelStatus()
 			}
 		}
 	}

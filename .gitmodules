@@ -1,3 +1,4 @@
 [submodule "solarxr-protocol"]
 	path = solarxr-protocol
 	url = https://github.com/ImSapphire/SolarXR-Protocol.git
+	branch = accel-mount
