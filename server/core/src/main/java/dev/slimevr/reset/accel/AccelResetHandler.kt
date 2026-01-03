@@ -78,8 +78,6 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 		// Rest detection
 		tracker.updateRestState(sample)
 		tracker.addRestSample(sample)
-		// TODO: This shouldn't be done like this
-		tracker.tracker.accelMountInProgress = isRecording && tracker.moving
 
 		if (!isRecording) {
 			// We haven't started moving yet, don't start recording
@@ -197,7 +195,6 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 		// Unregister our tracker event listener
 		for (tracker in trackers) {
 			tracker.tracker.accelTickCallback = null
-			tracker.tracker.accelMountInProgress = false
 		}
 	}
 

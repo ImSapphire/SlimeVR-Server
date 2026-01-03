@@ -275,9 +275,6 @@ fun createTrackerData(
 	if (mask.stayAligned) {
 		TrackerData.addStayAligned(fbb, stayAlignedOffset)
 	}
-	if (mask.accelRecordingInProgress) {
-		TrackerData.addAccelRecordingInProgress(fbb, tracker.accelMountInProgress)
-	}
 
 	return TrackerData.endTrackerData(fbb)
 }

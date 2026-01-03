@@ -176,7 +176,6 @@ class Tracker @JvmOverloads constructor(
 	// Currently only used for accel resets, to add anything else, consider using a
 	//  subscribable event listener instead
 	var accelTickCallback: ((tracker: Tracker) -> Unit)? = null
-	var accelMountInProgress = false
 
 	init {
 		// IMPORTANT: Look here for the required states of inputs
