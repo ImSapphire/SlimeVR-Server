@@ -263,18 +263,33 @@ const stepContentLookup: Record<
       </>
     );
   },
-  [TrackingChecklistStepId.MOUNTING_CALIBRATION]: (step, { toggleSession }) => {
+  [TrackingChecklistStepId.MOUNTING_CALIBRATION]: (
+    step,
+    { resetSettings, toggleSession }
+  ) => {
     return (
       <div className="space-y-2.5">
-        <Typography id="onboarding-automatic_mounting-mounting_reset-step-0" />
-        <Typography id="onboarding-automatic_mounting-mounting_reset-step-1" />
-        <div className="flex w-full justify-center">
-          <img
-            src="/images/mounting-reset-pose.webp"
-            className="h-44"
-            alt="mounting reset ski pose"
-          />
-        </div>
+        {resetSettings?.stepMounting && (
+          <>
+            <Typography id="onboarding-automatic_mounting-step_mounting-step-0" />
+            <Typography id="onboarding-automatic_mounting-step_mounting-step-1" />
+            <Typography id="onboarding-automatic_mounting-step_mounting-step-2" />
+            <Typography id="onboarding-automatic_mounting-step_mounting-step-3" />
+          </>
+        )}
+        {!resetSettings?.stepMounting && (
+          <>
+            <Typography id="onboarding-automatic_mounting-mounting_reset-step-0" />
+            <Typography id="onboarding-automatic_mounting-mounting_reset-step-1" />
+            <div className="flex w-full justify-center">
+              <img
+                src="/images/mounting-reset-pose.webp"
+                className="h-44"
+                alt="mounting reset ski pose"
+              />
+            </div>
+          </>
+        )}
         <div className="flex justify-between sm:items-center gap-1 flex-col sm:flex-row">
           <ResetButton type={ResetType.Mounting} group="default" />
           {step.ignorable && (

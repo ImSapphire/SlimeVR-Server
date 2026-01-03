@@ -1183,6 +1183,10 @@ onboarding-automatic_mounting-done-restart = Try again
 onboarding-automatic_mounting-mounting_reset-title = Mounting Calibration
 onboarding-automatic_mounting-mounting_reset-step-0 = 1. Squat in a "skiing" pose with your legs bent, your upper body tilted forwards, and your arms bent.
 onboarding-automatic_mounting-mounting_reset-step-1 = 2. Press the "Mounting calibration" button and wait for 3 seconds before the trackers' mounting orientations will reset.
+onboarding-automatic_mounting-step_mounting-step-0 = 1. Stand in the same pose as your full reset.
+onboarding-automatic_mounting-step_mounting-step-1 = 2. Press the "Mounting calibration" button and wait for 3 seconds before the recording starts.
+onboarding-automatic_mounting-step_mounting-step-2 = 3. Take a small step forward. Make sure your pose after the step is the same as your full reset.
+onboarding-automatic_mounting-step_mounting-step-3 = 4. Wait for the trackers' mounting orientations to reset.
 
 onboarding-automatic_mounting-mounting_reset-feet-step-0 = 1. Stand on your toes with both feet pointing forward. Alternatively you can do it sitting on a chair.
 onboarding-automatic_mounting-mounting_reset-feet-step-1 = 2. Press the "Feet calibration" button and wait for 3 seconds before the trackers' mounting orientations will reset.

@@ -7,6 +7,9 @@ import {
   IgnoreTrackingChecklistStepRequestT,
   RpcMessage,
   TrackerIdT,
+  ResetsSettingsT,
+  SettingsRequestT,
+  SettingsResponseT,
 } from 'solarxr-protocol';
 import { useWebsocketAPI } from './websocket-api';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
@@ -107,6 +110,19 @@ export function provideTrackingChecklist() {
     visibleSteps: [],
     ignoredSteps: [],
   });
+  const [resetSettings, setResetSettings] = useState<ResetsSettingsT | null>(null);
+
+  useEffect(() => {
+    sendRPCPacket(RpcMessage.SettingsRequest, new SettingsRequestT());
+    sendRPCPacket(RpcMessage.TrackingChecklistRequest, new TrackingChecklistRequestT());
+  }, []);
+
+  useRPCPacket(
+    RpcMessage.SettingsResponse,
+    ({ resetsSettings }: SettingsResponseT) => {
+      setResetSettings(resetsSettings);
+    }
+  );
 
   useRPCPacket(
     RpcMessage.TrackingChecklistResponse,
@@ -125,10 +141,6 @@ export function provideTrackingChecklist() {
       });
     }
   );
-
-  useEffect(() => {
-    sendRPCPacket(RpcMessage.TrackingChecklistRequest, new TrackingChecklistRequestT());
-  }, []);
 
   const firstRequired = useMemo(
     () =>
@@ -203,6 +215,7 @@ export function provideTrackingChecklist() {
   return {
     ...steps,
     sessionIgnoredSteps,
+    resetSettings,
     firstRequired,
     highlightedTrackers,
     progress,
