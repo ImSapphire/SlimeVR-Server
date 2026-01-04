@@ -1632,6 +1632,10 @@ class HumanSkeleton(
 					return@let
 				}
 
+				if (humanPoseManager.server != null)
+					humanPoseManager.server.configManager.vrConfig.resetsConfig.lastMountingMethod =
+						MountingMethods.AUTOMATIC
+
 				// Start step mounting
 				accelResetHandler.start(
 					hmd,
