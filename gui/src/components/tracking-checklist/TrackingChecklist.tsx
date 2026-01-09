@@ -9,6 +9,10 @@ import {
   ResetType,
   TrackingChecklistPublicNetworksT,
   TrackingChecklistStepId,
+  ResetsSettingsT,
+  SettingsRequestT,
+  SettingsResponseT,
+  RpcMessage,
 } from 'solarxr-protocol';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -29,6 +33,7 @@ import { WrenchIcon } from '@/components/commons/icon/WrenchIcons';
 import { TrackingChecklistModal } from './TrackingChecklistModal';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useBreakpoint } from '@/hooks/breakpoint';
+import { useWebsocketAPI } from '@/hooks/websocket-api';
 
 function Step({
   step: { status, id, optional, firstRequired },
@@ -98,6 +103,66 @@ function Step({
       {(firstRequired || open) && children && (
         <div className="pt-2 pl-5">{children}</div>
       )}
+    </div>
+  );
+}
+
+// we need a parent component when using hooks in the root of a step, otherwise React blows up
+function MountingCalibration({
+  step,
+  context,
+}: {
+  step: TrackingChecklistStep;
+  context: TrackingChecklistContext;
+}) {
+  const { sendRPCPacket, useRPCPacket } = useWebsocketAPI();
+  const [resetSettings, setResetSettings] = useState<ResetsSettingsT | null>(
+    null
+  );
+
+  useEffect(() => {
+    sendRPCPacket(RpcMessage.SettingsRequest, new SettingsRequestT());
+  }, []);
+
+  useRPCPacket(
+    RpcMessage.SettingsResponse,
+    ({ resetsSettings }: SettingsResponseT) => {
+      setResetSettings(resetsSettings);
+    }
+  );
+  return (
+    <div className="space-y-2.5">
+      {resetSettings?.stepMounting && (
+        <>
+          <Typography id="onboarding-automatic_mounting-step_mounting-step-0" />
+          <Typography id="onboarding-automatic_mounting-step_mounting-step-1" />
+          <Typography id="onboarding-automatic_mounting-step_mounting-step-2" />
+          <Typography id="onboarding-automatic_mounting-step_mounting-step-3" />
+        </>
+      )}
+      {!resetSettings?.stepMounting && (
+        <>
+          <Typography id="onboarding-automatic_mounting-mounting_reset-step-0" />
+          <Typography id="onboarding-automatic_mounting-mounting_reset-step-1" />
+          <div className="flex w-full justify-center">
+            <img
+              src="/images/mounting-reset-pose.webp"
+              className="h-44"
+              alt="mounting reset ski pose"
+            />
+          </div>
+        </>
+      )}
+      <div className="flex justify-between sm:items-center gap-1 flex-col sm:flex-row">
+        <ResetButton type={ResetType.Mounting} group="default" />
+        {step.ignorable && (
+          <Button
+            id="tracking_checklist-ignore"
+            variant="secondary"
+            onClick={() => context.toggleSession(step.id)}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -263,45 +328,8 @@ const stepContentLookup: Record<
       </>
     );
   },
-  [TrackingChecklistStepId.MOUNTING_CALIBRATION]: (
-    step,
-    { resetSettings, toggleSession }
-  ) => {
-    return (
-      <div className="space-y-2.5">
-        {resetSettings?.stepMounting && (
-          <>
-            <Typography id="onboarding-automatic_mounting-step_mounting-step-0" />
-            <Typography id="onboarding-automatic_mounting-step_mounting-step-1" />
-            <Typography id="onboarding-automatic_mounting-step_mounting-step-2" />
-            <Typography id="onboarding-automatic_mounting-step_mounting-step-3" />
-          </>
-        )}
-        {!resetSettings?.stepMounting && (
-          <>
-            <Typography id="onboarding-automatic_mounting-mounting_reset-step-0" />
-            <Typography id="onboarding-automatic_mounting-mounting_reset-step-1" />
-            <div className="flex w-full justify-center">
-              <img
-                src="/images/mounting-reset-pose.webp"
-                className="h-44"
-                alt="mounting reset ski pose"
-              />
-            </div>
-          </>
-        )}
-        <div className="flex justify-between sm:items-center gap-1 flex-col sm:flex-row">
-          <ResetButton type={ResetType.Mounting} group="default" />
-          {step.ignorable && (
-            <Button
-              id="tracking_checklist-ignore"
-              variant="secondary"
-              onClick={() => toggleSession(step.id)}
-            />
-          )}
-        </div>
-      </div>
-    );
+  [TrackingChecklistStepId.MOUNTING_CALIBRATION]: (step, context) => {
+    return <MountingCalibration step={step} context={context} />;
   },
   [TrackingChecklistStepId.FEET_MOUNTING_CALIBRATION]: (
     step,

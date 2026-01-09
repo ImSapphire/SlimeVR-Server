@@ -1644,3 +1644,12 @@ toolbar-mounting_calibration-fingers = Fingers
 toolbar-drift_reset = Drift Reset
 toolbar-assigned_trackers = {$count} trackers assigned
 toolbar-unassigned_trackers = {$count} trackers unassigned
+
+step_mounting-title = Step Mounting Progress
+step_mounting-WAITING_FOR_MOVEMENT = Waiting for you to move
+step_mounting-WAITING_FOR_REST = Waiting for you to stand still
+step_mounting-PROCESSING = Processing recording
+step_mounting-DONE = Done!
+step_mounting-ERROR_HIGH_ERROR = Calibration failed, please try again.
+step_mounting-ERROR_TIMEOUT = Calibration timed out, please try again.
+step_mounting-cancel

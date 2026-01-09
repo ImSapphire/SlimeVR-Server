@@ -3,16 +3,25 @@ package dev.slimevr.reset.accel
 import dev.slimevr.tracking.trackers.Tracker
 import dev.slimevr.util.AccelAccumulator
 import io.eiren.util.logging.LogManager
+import io.github.axisangles.ktmath.Quaternion
 import io.github.axisangles.ktmath.Vector3
+import solarxr_protocol.rpc.StepMountingStatus
+import solarxr_protocol.rpc.StepMountingStatusResponseT
 import java.util.Timer
 import java.util.TimerTask
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.schedule
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
+import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
+
+interface StepMountingListener {
+	fun onStatusChange(status: StepMountingStatusResponseT)
+}
 
 // Handles recording and processing of acceleration-based session calibration
 class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic) {
@@ -25,6 +34,7 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 
 	private val recordingLock = ReentrantLock()
 
+	private val listeners: MutableList<StepMountingListener> = CopyOnWriteArrayList()
 	private var hmd: Tracker? = null
 	private val trackers: MutableList<RecordingWrapper> = mutableListOf()
 
@@ -65,6 +75,7 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 		}
 
 		LogManager.info("[AccelResetHandler] Reset requested, detecting movement...")
+		sendStatusUpdate(StepMountingStatus.WAITING_FOR_MOVEMENT, 0)
 	}
 
 	/**
@@ -99,6 +110,7 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 				}
 
 				LogManager.info("[AccelResetHandler] Movement detected, recording started!")
+				sendStatusUpdate(StepMountingStatus.WAITING_FOR_REST, 0)
 			}
 		} else if (
 			timeSource.markNow() - recStartTime > MINIMUM_DURATION &&
@@ -133,6 +145,7 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 		stop()
 
 		LogManager.info("[AccelResetHandler] Done recording, processing...")
+		var mountRots: MutableList<Quaternion> = mutableListOf()
 
 		for (tracker in trackers) {
 			val firstSample = tracker.recording.first()
@@ -157,8 +170,7 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 			val trackerXZ = Vector3(trackerOffset.x, 0f, trackerOffset.z)
 			val hmdOffset = lastSample.hmdPos - firstSample.hmdPos
 			val hmdXZ = Vector3(hmdOffset.x, 0f, hmdOffset.z)
-
-			// TODO: Fail on high error
+			val error = trackerXZ.len() - hmdXZ.len()
 
 			// Compute mounting to fix the yaw offset from tracker to HMD
 			val mountRot = RecordingProcessor.angle(trackerXZ.unit()) *
@@ -167,7 +179,6 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 			// Apply that mounting to the tracker
 			val resetsHandler = tracker.tracker.resetsHandler
 			val finalMounting = resetsHandler.mountingOrientation * resetsHandler.mountRotFix * mountRot
-			resetsHandler.mountRotFix *= mountRot
 
 			LogManager.info(
 				"[Accel] Tracker ${tracker.tracker.id} (${tracker.tracker.trackerPosition?.designation}):\n" +
@@ -176,7 +187,21 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 					"Error value (meters): ${trackerXZ.len() - hmdXZ.len()}\n" +
 					"Resulting mounting: $finalMounting",
 			)
+
+			if (error.absoluteValue > 0.2f) {
+				LogManager.severe("[Accel] Error for tracker ${tracker.tracker.id} is too high")
+				sendStatusUpdate(StepMountingStatus.ERROR_HIGH_ERROR, 0)
+				clean()
+				return
+			}
+
+			mountRots.add(mountRot)
 		}
+
+		for ((i, tracker) in trackers.withIndex()) {
+			tracker.tracker.resetsHandler.mountRotFix *= mountRots[i]
+		}
+		sendStatusUpdate(StepMountingStatus.DONE, 0)
 
 		clean()
 	}
@@ -223,7 +248,24 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 	 */
 	private fun timeout() {
 		LogManager.warning("[AccelResetHandler] Reset timed out, aborting")
+		sendStatusUpdate(StepMountingStatus.ERROR_TIMEOUT, 0)
 		clean()
+	}
+
+	fun addListener(listener: StepMountingListener) {
+		listeners.add(listener)
+	}
+
+	fun removeListener(listener: StepMountingListener) {
+		listeners.remove(listener)
+	}
+
+	fun sendStatusUpdate(status: Int, progress: Byte) {
+		val res = StepMountingStatusResponseT().apply {
+			this.status = status
+			this.progress = progress
+		}
+		listeners.forEach { it.onStatusChange(res) }
 	}
 
 	companion object {
