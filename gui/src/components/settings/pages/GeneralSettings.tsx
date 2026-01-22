@@ -873,7 +873,7 @@ export function GeneralSettings() {
                 )}
               />
             </div>
-            <div className="grid sm:grid-cols-1 gap-3 pb-3">
+            <div className="flex flex-col pt-2 pb-3">
               <Typography>
                 {l10n.getString(
                   'settings-general-fk_settings-reset_settings-reset_hmd_pitch-description'
@@ -891,7 +891,7 @@ export function GeneralSettings() {
                 )}
               />
             </div>
-            <div className="grid sm:grid-cols-1 gap-3 pb-3">
+            <div className="flex flex-col pt-2 pb-3">
               <Typography>
                 {l10n.getString(
                   'settings-general-fk_settings-leg_fk-reset_mounting_feet-description-v1'
