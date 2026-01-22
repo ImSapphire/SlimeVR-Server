@@ -124,12 +124,12 @@ function StepMountingStatusModal({
         <TipBox>{l10n.getString('step_mounting-head_rotation_tip')}</TipBox>
 
         {status >= StepMountingStatus.ERROR_TIMEOUT && (
-          <>
+          <div className="grid grid-cols-2 gap-2">
             <ResetButton type={ResetType.Mounting} group="default" />
             <Button variant="tertiary" onClick={onCancel}>
               <Typography id="step_mounting-cancel" />
             </Button>
-          </>
+          </div>
         )}
       </div>
     </div>
