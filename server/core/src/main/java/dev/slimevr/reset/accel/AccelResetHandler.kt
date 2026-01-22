@@ -1,6 +1,8 @@
 package dev.slimevr.reset.accel
 
+import dev.slimevr.VRServer
 import dev.slimevr.tracking.trackers.Tracker
+import dev.slimevr.tracking.trackers.TrackerUtils
 import dev.slimevr.util.AccelAccumulator
 import io.eiren.util.logging.LogManager
 import io.github.axisangles.ktmath.Quaternion
@@ -202,6 +204,16 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 			tracker.tracker.resetsHandler.mountRotFix *= mountRots[i]
 		}
 		sendStatusUpdate(StepMountingStatus.DONE, 0)
+		VRServer.instance.trackingChecklistManager.resetMountingCompleted = trackers.any {
+			val defaultParts = if (VRServer.instance.configManager.vrConfig.resetsConfig.resetMountingFeet) {
+				TrackerUtils.allBodyPartsButFingers
+			} else {
+				TrackerUtils.allBodyPartsButFingersAndFeets
+			}
+
+			return@any defaultParts.contains(it.tracker.trackerPosition?.bodyPart)
+		}
+		VRServer.instance.trackingChecklistManager.feetResetMountingCompleted = trackers.any { TrackerUtils.feetsBodyParts.contains(it.tracker.trackerPosition?.bodyPart) }
 
 		clean()
 	}
