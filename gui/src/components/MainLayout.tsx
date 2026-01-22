@@ -25,6 +25,8 @@ import { ProgressBar } from './commons/ProgressBar';
 import { BaseModal } from './commons/BaseModal';
 import { ResetButton } from './home/ResetButton';
 import { Button } from './commons/Button';
+import { TipBox } from './commons/TipBox';
+import { useLocalization } from '@fluent/react';
 
 const statusSteps = [
   // Order matters be carefull
@@ -105,6 +107,7 @@ function StepMountingStatusModal({
   status: StepMountingStatus;
   onCancel: () => void;
 }) {
+  const { l10n } = useLocalization();
   return <BaseModal isOpen={isOpen}>
     <div className="flex flex-col h-full rounded-t-lg xs:rounded-b-lg bg-background-60 xs:py-2 px-2 pt-4 relative">
       <div className="flex flex-col bg-background-60 rounded-lg">
@@ -117,6 +120,8 @@ function StepMountingStatusModal({
         <div className="flex flex-col py-2">
           <Stepper status={status} />
         </div>
+
+        <TipBox>{l10n.getString('step_mounting-head_rotation_tip')}</TipBox>
 
         {status >= StepMountingStatus.ERROR_TIMEOUT && (
           <>
