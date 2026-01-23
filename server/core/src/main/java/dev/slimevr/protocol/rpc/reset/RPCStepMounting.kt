@@ -16,7 +16,7 @@ class RPCStepMounting(var rpcHandler: RPCHandler, var api: ProtocolAPI) : StepMo
 	val accelResetHandler = this.api.server.humanPoseManager.skeleton.accelResetHandler
 
 	init {
-		accelResetHandler.addListener(this)
+		accelResetHandler?.addListener(this)
 	}
 
 	override fun onStatusChange(status: StepMountingStatusResponseT) {

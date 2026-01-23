@@ -6,6 +6,8 @@ import {
   ResetStatus,
   ResetType,
   RpcMessage,
+  SettingsRequestT,
+  SettingsResponseT,
 } from 'solarxr-protocol';
 import { useWebsocketAPI } from './websocket-api';
 import { useAtomValue } from 'jotai';
@@ -41,6 +43,7 @@ export function useReset(
   const [status, setStatus] = useState<ResetBtnStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [stepMounting, setStepMounting] = useState(false);
 
   const parts = BODY_PARTS_GROUPS['group' in options ? options.group : 'default'];
 
@@ -85,6 +88,13 @@ export function useReset(
     setProgress(progress / 1000);
     setDuration(duration / 1000);
   };
+
+  useEffect(() => {
+    sendRPCPacket(RpcMessage.SettingsRequest, new SettingsRequestT());
+  }, []);
+  useRPCPacket(RpcMessage.SettingsResponse, ({ resetsSettings }: SettingsResponseT) => {
+    if (resetsSettings) setStepMounting(resetsSettings.stepMounting);
+  });
 
   useRPCPacket(
     RpcMessage.ResetResponse,
@@ -140,9 +150,14 @@ export function useReset(
       disabled = true;
       error = `reset-error-no_${options.group}_tracker`;
     }
-  } else if (options.type === ResetType.Mounting && !serverGuards?.canDoMounting) {
-    disabled = true;
-    error = 'reset-error-mounting-need_full_reset';
+  } else if (options.type === ResetType.Mounting) {
+    if (stepMounting && !serverGuards?.canDoStepMounting) {
+      disabled = true;
+      error = 'reset-error-step_mounting-need_positional_tracker';
+    } else if (!serverGuards?.canDoMounting) {
+      disabled = true;
+      error = 'reset-error-mounting-need_full_reset';
+    }
   } else if (options.type === ResetType.Yaw && !serverGuards?.canDoYawReset) {
     disabled = true;
     error = 'reset-error-yaw-need_full_reset';

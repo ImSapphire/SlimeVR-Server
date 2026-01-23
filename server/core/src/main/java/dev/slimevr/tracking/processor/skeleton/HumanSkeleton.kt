@@ -217,8 +217,7 @@ class HumanSkeleton(
 	var localizer = Localizer(this)
 	var ikSolver = IKSolver(headBone)
 	var userHeightCalibration: UserHeightCalibration? = null
-
-	val accelResetHandler = AccelResetHandler()
+	var accelResetHandler: AccelResetHandler? = null
 
 	// Stay Aligned
 	var trackerSkeleton = TrackerSkeleton(this)
@@ -241,6 +240,7 @@ class HumanSkeleton(
 			humanPoseManager,
 		)
 		userHeightCalibration = UserHeightCalibration(server, humanPoseManager)
+		accelResetHandler = AccelResetHandler(server)
 		legTweaks.setConfig(server.configManager.vrConfig.legTweaks)
 		localizer.setEnabled(humanPoseManager.getToggle(SkeletonConfigToggles.SELF_LOCALIZATION))
 		stayAlignedConfig = server.configManager.vrConfig.stayAlignedConfig
@@ -480,6 +480,7 @@ class HumanSkeleton(
 		tapDetectionManager?.refresh()
 
 		userHeightCalibration?.checkTrackers()
+		accelResetHandler?.checkTrackers()
 
 		// Rebuild Ik Solver
 		ikSolver.buildChains(trackers)
@@ -1637,7 +1638,7 @@ class HumanSkeleton(
 						MountingMethods.AUTOMATIC
 
 				// Start step mounting
-				accelResetHandler.start(
+				accelResetHandler!!.start(
 					hmd,
 					trackersToReset.filterNotNull().filter {
 						it.allowMounting && (bodyParts.isEmpty() || bodyParts.contains(it.trackerPosition?.bodyPart))

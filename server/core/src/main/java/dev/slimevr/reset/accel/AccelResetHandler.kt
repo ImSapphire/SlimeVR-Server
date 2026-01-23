@@ -2,6 +2,8 @@ package dev.slimevr.reset.accel
 
 import dev.slimevr.VRServer
 import dev.slimevr.tracking.trackers.Tracker
+import dev.slimevr.tracking.trackers.TrackerPosition
+import dev.slimevr.tracking.trackers.TrackerStatus
 import dev.slimevr.tracking.trackers.TrackerUtils
 import dev.slimevr.util.AccelAccumulator
 import io.eiren.util.logging.LogManager
@@ -26,7 +28,7 @@ interface StepMountingListener {
 }
 
 // Handles recording and processing of acceleration-based session calibration
-class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic) {
+class AccelResetHandler(val server: VRServer, val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic) {
 	var isRunning: Boolean = false
 		private set
 	var isDetecting: Boolean = false
@@ -44,6 +46,20 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 	private var timerTask: TimerTask? = null
 
 	private var recStartTime = timeSource.markNow()
+
+	init {
+		checkTrackers()
+	}
+
+	fun checkTrackers() {
+		val hmd = server.allTrackers.find {
+			it.trackerPosition == TrackerPosition.HEAD &&
+				it.hasPosition &&
+				!it.isInternal &&
+				it.status == TrackerStatus.OK
+		}
+		server.serverGuards.canDoStepMounting = hmd != null
+	}
 
 	/**
 	 * Starts the accel reset process. performing rest detection on the trackers
@@ -204,8 +220,8 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 			tracker.tracker.resetsHandler.mountRotFix *= mountRots[i]
 		}
 		sendStatusUpdate(StepMountingStatus.DONE, 0)
-		VRServer.instance.trackingChecklistManager.resetMountingCompleted = trackers.any {
-			val defaultParts = if (VRServer.instance.configManager.vrConfig.resetsConfig.resetMountingFeet) {
+		server.trackingChecklistManager.resetMountingCompleted = trackers.any {
+			val defaultParts = if (server.configManager.vrConfig.resetsConfig.resetMountingFeet) {
 				TrackerUtils.allBodyPartsButFingers
 			} else {
 				TrackerUtils.allBodyPartsButFingersAndFeets
@@ -213,7 +229,7 @@ class AccelResetHandler(val timeSource: TimeSource.WithComparableMarks = TimeSou
 
 			return@any defaultParts.contains(it.tracker.trackerPosition?.bodyPart)
 		}
-		VRServer.instance.trackingChecklistManager.feetResetMountingCompleted = trackers.any { TrackerUtils.feetsBodyParts.contains(it.tracker.trackerPosition?.bodyPart) }
+		server.trackingChecklistManager.feetResetMountingCompleted = trackers.any { TrackerUtils.feetsBodyParts.contains(it.tracker.trackerPosition?.bodyPart) }
 
 		clean()
 	}

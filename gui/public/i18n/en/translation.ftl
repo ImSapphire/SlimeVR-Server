@@ -257,6 +257,7 @@ reset-yaw = Yaw Reset
 reset-error-no_feet_tracker = No feet tracker assigned
 reset-error-no_fingers_tracker = No finger tracker assigned
 reset-error-mounting-need_full_reset = Need a full reset before mounting
+reset-error-step_mounting-need_positional_tracker = Need a HMD or positional head tracker for step mounting
 reset-error-yaw-need_full_reset = Need a full reset before yaw reset
 
 ## Serial detection stuff

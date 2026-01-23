@@ -500,4 +500,5 @@ fun createServerGuard(fbb: FlatBufferBuilder, serverGuards: ServerGuards): Int =
 	serverGuards.canDoMounting,
 	serverGuards.canDoYawReset,
 	serverGuards.canDoUserHeightCalibration,
+	serverGuards.canDoStepMounting
 )
